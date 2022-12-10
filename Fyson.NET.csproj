@@ -15,4 +15,8 @@
     <PackageReference Include="Serilog.Sinks.Console" Version="4.1.1-dev-00896" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Commands\" />
+  </ItemGroup>
+
 </Project>

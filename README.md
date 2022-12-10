@@ -1,4 +1,4 @@
 # Fyson.NET
 
-从 [Fyson](https://gitee.com/fyukina/fyson) 移植到.NET
-*待完工*
+Ported from [Fyson](https://gitee.com/fyukina/fyson)
+*Work-In-Progress*
