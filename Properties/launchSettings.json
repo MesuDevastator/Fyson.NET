@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Fyson.NET": {
+      "commandName": "Project",
+      "commandLineArgs": "/e .\\standard.json"
+    }
+  }
+}
