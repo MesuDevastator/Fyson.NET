@@ -32,38 +32,66 @@ public static partial class ExpressionExtension
         {
             if (string.IsNullOrWhiteSpace(expression[index].ToString()))
                 continue;
-            // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
             switch (lastType)
             {
-                case LabelType.Unset when expression[index].IsVariable():   // -> expression[0] (var)
-                    lastType = LabelType.Variable;
-                    lastBuilder.Append(expression[index]);                  // APPEND ONLY
-                    break;
-                case LabelType.Number when expression[index].IsVariable():  // expression[n] (num) -> expression[n+1] (var)
-                    lastType = LabelType.Unset;
+                case LabelType.Unset when expression[index].IsVariable():
                     lastBuilder.Append(expression[index]);
-                    strings.Add(LabelType.Number, lastBuilder.ToString());
-                    lastBuilder.Clear();                                    // APPEND & FLUSH
+                    lastType = LabelType.Variable;
                     break;
-                case LabelType.Unset when expression[index].IsNumber():     // -> expression[0] (num)
+                case LabelType.Unset when expression[index].IsNumber():
+                    lastBuilder.Append(expression[index]);
                     lastType = LabelType.Number;
-                    lastBuilder.Append(expression[index]);                  // APPEND ONLY
                     break;
-                case LabelType.Unset when expression[index].IsOperator():   // -> expression[0] (op)
-                case LabelType.Variable when expression[index].IsOperator():// expression[n] (var) -> expression[n+1] (op)
-                case LabelType.Number when expression[index].IsOperator():  // expression[n] (num) -> expression[n+1] (op)
-                    lastType = LabelType.Unset;
-                    strings.Add(LabelType.Operator, expression[index].ToString());
-                    lastBuilder.Clear();                                    // FLUSH ONLY (Append is not necessary, one operator is defaulted to one character)
+                case LabelType.Unset when expression[index].IsOperator():
+                    lastBuilder.Append(expression[index]);
+                    lastType = LabelType.Operator;
                     break;
-                case LabelType.Variable when expression[index].IsVariable():// expression[n] (var) -> expression[n+1] (var)
-                case LabelType.Variable when expression[index].IsNumber():  // expression[n] (var) -> expression[n+1] (num)
-                case LabelType.Number when expression[index].IsNumber():    // expression[n] (num) -> expression[n+1] (num)
+                case LabelType.Variable when expression[index].IsVariable():
+                    lastBuilder.Append(expression[index]);
+                    break;
+                case LabelType.Variable when expression[index].IsNumber():
+                    lastBuilder.Append(expression[index]);
+                    break;
+                case LabelType.Variable when expression[index].IsOperator():
+                    strings.Add(lastType, lastBuilder.ToString());
+                    lastBuilder.Clear().Append(expression[index]);
+                    lastType = LabelType.Operator;
+                    break;
+                case LabelType.Number when expression[index].IsVariable():
+                    strings.Add(lastType, lastBuilder.ToString());
+                    lastBuilder.Clear().Append(expression[index]);
+                    lastType = LabelType.Variable;
+                    break;
+                case LabelType.Number when expression[index].IsNumber():
+                    lastBuilder.Append(expression[index]);
+                    break;
+                case LabelType.Number when expression[index].IsOperator():
+                    strings.Add(lastType, lastBuilder.ToString());
+                    lastBuilder.Clear().Append(expression[index]);
+                    lastType = LabelType.Operator;
+                    break;
+                case LabelType.Operator when expression[index].IsVariable():
+                    strings.Add(lastType, lastBuilder.ToString());
+                    lastBuilder.Clear().Append(expression[index]);
+                    lastType = LabelType.Variable;
+                    break;
+                case LabelType.Operator when expression[index].IsNumber():
+                    strings.Add(lastType, lastBuilder.ToString());
+                    lastBuilder.Clear().Append(expression[index]);
+                    lastType = LabelType.Number;
+                    break;
+                case LabelType.Operator when expression[index].IsOperator():
+                    strings.Add(lastType, lastBuilder.ToString());
+                    lastBuilder.Clear().Append(expression[index]);
+                    lastType = LabelType.Operator;
+                    break;
                 default:
-                    break;                                                  // UNCHANGED
+                    throw new ArgumentOutOfRangeException(nameof(lastType), lastType,
+                        $"{nameof(lastType)} out of range");
             }
         }
 
+        strings.Add(lastType, lastBuilder.ToString());
         return strings;
     }
 
@@ -87,12 +115,13 @@ public class Expression
         if (!expression.StartsWith('§'))
             return expression;
         // TODO: Use StringBuilder
-        for (var index = 0; index < expression.Length; index++)
+        for (var index = 0; index < expression.Length - 2; index++)
         {
-            string fullExpression;
-            if ((fullExpression = expression.Substring(index, expression.IndexOf('}', index) - 1)).StartsWith("#{"))
-                expression = expression.Replace(fullExpression,
-                    ParseValue(fullExpression[2..], context).ToString(CultureInfo.CurrentCulture));
+            if (expression.Substring(index, 2) != "#{")
+                continue;
+            var fullExpression = expression.Substring(index + 2, expression.IndexOf('}', index) - index - 2);
+            expression = expression.Replace(fullExpression,
+                ParseValue(fullExpression, context).ToString(CultureInfo.CurrentCulture));
         }
 
         return expression;
