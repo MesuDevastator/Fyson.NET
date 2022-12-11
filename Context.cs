@@ -40,4 +40,6 @@ public class Context
             return (Variable<T>?)(from var in _variables where var is Variable<T> where var.Name == name select var)
                 .FirstOrDefault();
     }
+
+    public int CommandIndex { get; set; } = 0;
 }

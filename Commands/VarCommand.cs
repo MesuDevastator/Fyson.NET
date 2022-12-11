@@ -40,7 +40,8 @@ public static class VarCommand
             case JsonValueKind.Null:
                 return;
             default:
-                throw new ArgumentOutOfRangeException(nameof(arguments.ValueKind), arguments.ValueKind, $"{nameof(arguments.ValueKind)} out of range");
+                throw new ArgumentOutOfRangeException(nameof(arguments.ValueKind), arguments.ValueKind,
+                    $"{nameof(arguments.ValueKind)} out of range");
         }
 
         context.SetVariable(variable.Identifier, value);

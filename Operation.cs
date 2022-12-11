@@ -9,8 +9,13 @@ public class Operation
 
     [JsonPropertyName("args")] public JsonElement Arguments { get; set; }
 
-    public void Execute(Context context) =>
-        (Command?.FindHandler() ?? ((command, arguments, _) =>
-            throw new CommandNotFoundException("Command not found", command, arguments)))(Command ?? "", Arguments,
-            context);
+    [JsonPropertyName("when")] public string? Condition { get; set; }
+
+    public void Execute(Context context)
+    {
+        if (Condition is not null && new Expression(Condition, context).ExpressionResult != "0")
+            (Command?.FindHandler() ?? ((command, arguments, _) =>
+                throw new CommandNotFoundException("Command not found", command, arguments)))(Command ?? "", Arguments,
+                context);
+    }
 }

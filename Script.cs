@@ -2,13 +2,9 @@
 
 namespace Fyson;
 
-public class Script
+public class Script : BasicScript
 {
     [JsonPropertyName("require")] public Requirements Requirements { get; set; } = new();
 
     [JsonPropertyName("debug")] public bool Debug { get; set; }
-
-    [JsonPropertyName("scripts")] public List<Operation> Operations { get; set; } = new();
-
-    [JsonIgnore] public Context Context { get; set; } = new();
 }

@@ -13,7 +13,7 @@ public static partial class ExpressionExtension
     [GeneratedRegex(@"[0-9]")]
     private static partial Regex NumberRegex();
 
-    [GeneratedRegex(@"[+\-*/%]")]
+    [GeneratedRegex(@"[~+\-*/%!^&\|=]")]
     private static partial Regex OperatorRegex();
 
     public enum LabelType
@@ -88,10 +88,7 @@ public static partial class ExpressionExtension
                     lastType = LabelType.Number;
                     break;
                 case LabelType.Operator when expression[index].IsOperator():
-                    strings.Add(lastBuilder.ToString());
-                    types.Add(lastType);
-                    lastBuilder.Clear().Append(expression[index]);
-                    lastType = LabelType.Operator;
+                    lastBuilder.Append(expression[index]);
                     break;
                 default:
                     lastBuilder.Append(expression[index]);
@@ -114,7 +111,7 @@ public static partial class ExpressionExtension
 
 public class Expression
 {
-    private object ParseValue(string expression, Context context)
+    public object ParseValue(string expression, Context context)
     {
         var lex = expression.LexExpression();
         for (var index = 0; index < Math.Min(lex.Item1.Count, lex.Item2.Count); index++)

@@ -51,17 +51,16 @@ public static class Program
             return 1;
         }
 
-        foreach (var operation in script.Operations)
-            try
-            {
-                operation.Execute(script.Context);
-            }
-            catch (Exception ex)
-            {
-                Logger.Fatal(ex, "Failed during executing operation {operation}",
-                    JsonSerializer.Serialize(operation));
-                return 1;
-            }
+        try
+        {
+            script.Execute(0);
+        }
+        catch (Exception ex)
+        {
+            Logger.Fatal(ex, "Failed during executing operation {operation}",
+                JsonSerializer.Serialize(script.Operations[script.Context.CommandIndex]));
+            return 1;
+        }
 
         return 0;
     }
