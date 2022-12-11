@@ -15,7 +15,8 @@ public static class LogCommand
 
     public static void OnCommand(string command, JsonElement arguments, Context context)
     {
-        if (command != "log") return;
+        if (command is not "log")
+            return;
         string? message;
         switch (arguments.ValueKind)
         {
@@ -34,10 +35,9 @@ public static class LogCommand
                 for (var index = 0; index < arguments.GetArrayLength(); index++)
                 {
                     JsonElement element;
-                    if ((element = arguments[index]).ValueKind == JsonValueKind.Object)
-                        messageBuilder.Append(element.CallFunction());
-                    else
-                        messageBuilder.Append(arguments[index].GetString());
+                    messageBuilder.Append((element = arguments[index]).ValueKind is JsonValueKind.Object
+                        ? $"{element.CallFunction()} {Environment.NewLine}"
+                        : $"{arguments[index].GetString()} {Environment.NewLine}");
                 }
 
                 Logger.Information(new Expression(messageBuilder.ToString(), context).ExpressionResult);

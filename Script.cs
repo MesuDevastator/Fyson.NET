@@ -10,5 +10,5 @@ public class Script
 
     [JsonPropertyName("scripts")] public List<Operation> Operations { get; set; } = new();
 
-    [JsonIgnore] public Context Context { get; } = new();
+    [JsonIgnore] public Context Context { get; set; } = new();
 }

@@ -33,7 +33,7 @@ public static class LibraryManager
         FunctionHandler? function;
         return call is not null && call.Function.StartsWith("lib:") &&
                (function = FindFunction(call.Function[4..])) is not null
-            ? function(call.Function, call.Parameters)
+            ? function(call.Function[4..], call.Parameters)
             : null;
     }
 

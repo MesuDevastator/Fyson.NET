@@ -25,6 +25,7 @@ public static class Program
         }
 
         CommandManager.RegisterCommand("log", LogCommand.OnCommand);
+        CommandManager.RegisterCommand("var", VarCommand.OnCommand);
         string executiveContent;
         try
         {

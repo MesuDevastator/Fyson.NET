@@ -1,4 +1,5 @@
-﻿using System.Globalization;
+﻿using System.Data;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -23,9 +24,10 @@ public static partial class ExpressionExtension
         Unset
     }
 
-    public static Dictionary<LabelType, string> LexExpression(this string expression)
+    public static (List<string>, List<LabelType>) LexExpression(this string expression)
     {
-        Dictionary<LabelType, string> strings = new();
+        List<string> strings = new();
+        List<LabelType> types = new();
         var lastType = LabelType.Unset;
         var lastBuilder = new StringBuilder();
         for (var index = 0; index < expression.Length; index++)
@@ -53,12 +55,14 @@ public static partial class ExpressionExtension
                     lastBuilder.Append(expression[index]);
                     break;
                 case LabelType.Variable when expression[index].IsOperator():
-                    strings.Add(lastType, lastBuilder.ToString());
+                    strings.Add(lastBuilder.ToString());
+                    types.Add(lastType);
                     lastBuilder.Clear().Append(expression[index]);
                     lastType = LabelType.Operator;
                     break;
                 case LabelType.Number when expression[index].IsVariable():
-                    strings.Add(lastType, lastBuilder.ToString());
+                    strings.Add(lastBuilder.ToString());
+                    types.Add(lastType);
                     lastBuilder.Clear().Append(expression[index]);
                     lastType = LabelType.Variable;
                     break;
@@ -66,33 +70,39 @@ public static partial class ExpressionExtension
                     lastBuilder.Append(expression[index]);
                     break;
                 case LabelType.Number when expression[index].IsOperator():
-                    strings.Add(lastType, lastBuilder.ToString());
+                    strings.Add(lastBuilder.ToString());
+                    types.Add(lastType);
                     lastBuilder.Clear().Append(expression[index]);
                     lastType = LabelType.Operator;
                     break;
                 case LabelType.Operator when expression[index].IsVariable():
-                    strings.Add(lastType, lastBuilder.ToString());
+                    strings.Add(lastBuilder.ToString());
+                    types.Add(lastType);
                     lastBuilder.Clear().Append(expression[index]);
                     lastType = LabelType.Variable;
                     break;
                 case LabelType.Operator when expression[index].IsNumber():
-                    strings.Add(lastType, lastBuilder.ToString());
+                    strings.Add(lastBuilder.ToString());
+                    types.Add(lastType);
                     lastBuilder.Clear().Append(expression[index]);
                     lastType = LabelType.Number;
                     break;
                 case LabelType.Operator when expression[index].IsOperator():
-                    strings.Add(lastType, lastBuilder.ToString());
+                    strings.Add(lastBuilder.ToString());
+                    types.Add(lastType);
                     lastBuilder.Clear().Append(expression[index]);
                     lastType = LabelType.Operator;
                     break;
                 default:
-                    throw new ArgumentOutOfRangeException(nameof(lastType), lastType,
-                        $"{nameof(lastType)} out of range");
+                    lastBuilder.Append(expression[index]);
+                    lastType = LabelType.Unset;
+                    break;
             }
         }
 
-        strings.Add(lastType, lastBuilder.ToString());
-        return strings;
+        strings.Add(lastBuilder.ToString());
+        types.Add(lastType);
+        return (strings, types);
     }
 
     private static bool IsVariable(this char character) => VariableRegex().IsMatch(character.ToString());
@@ -104,27 +114,35 @@ public static partial class ExpressionExtension
 
 public class Expression
 {
-    private double ParseValue(string expression, Context context)
+    private object ParseValue(string expression, Context context)
     {
-        var strings = expression.LexExpression();
-        return 0;
+        var lex = expression.LexExpression();
+        for (var index = 0; index < Math.Min(lex.Item1.Count, lex.Item2.Count); index++)
+        {
+            if (lex.Item2[index] is not ExpressionExtension.LabelType.Variable) continue;
+            lex.Item1[index] = context.GetVariable(lex.Item1[index])?.Value?.ToString() ?? string.Empty;
+            lex.Item2[index] = ExpressionExtension.LabelType.Number;
+        }
+
+        var builder = new StringBuilder();
+        foreach (var character in lex.Item1)
+            builder.Append(character);
+        return new DataTable().Compute(builder.ToString(), "false");
     }
 
     private string ParseExpression(string expression, Context context)
     {
         if (!expression.StartsWith('§'))
             return expression;
-        // TODO: Use StringBuilder
         for (var index = 0; index < expression.Length - 2; index++)
         {
             if (expression.Substring(index, 2) != "#{")
                 continue;
-            var fullExpression = expression.Substring(index + 2, expression.IndexOf('}', index) - index - 2);
-            expression = expression.Replace(fullExpression,
-                ParseValue(fullExpression, context).ToString(CultureInfo.CurrentCulture));
+            var fullExpression = expression[(index + 2)..expression.IndexOf('}', index)];
+            expression = expression.Replace($"#{{{fullExpression}}}", ParseValue(fullExpression, context).ToString());
         }
 
-        return expression;
+        return expression.Substring(1, expression.Length - 2);
     }
 
     public Expression(string expression, Context context)
