@@ -90,9 +90,9 @@ public class Expression
         for (var index = 0; index < expression.Length; index++)
         {
             string fullExpression;
-            if ((fullExpression = expression.Substring(index, expression.IndexOf('}', index))).StartsWith("#{"))
+            if ((fullExpression = expression.Substring(index, expression.IndexOf('}', index) - 1)).StartsWith("#{"))
                 expression = expression.Replace(fullExpression,
-                    ParseValue(fullExpression[2..],context).ToString(CultureInfo.CurrentCulture));
+                    ParseValue(fullExpression[2..], context).ToString(CultureInfo.CurrentCulture));
         }
 
         return expression;
