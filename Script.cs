@@ -9,4 +9,6 @@ public class Script
     [JsonPropertyName("debug")] public bool Debug { get; set; }
 
     [JsonPropertyName("scripts")] public List<Operation> Operations { get; set; } = new();
+
+    [JsonIgnore] public Context Context { get; } = new();
 }

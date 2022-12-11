@@ -9,7 +9,7 @@ public class Operation
 
     [JsonPropertyName("args")] public JsonElement Arguments { get; set; }
 
-    public void Execute() =>
-        (Command?.FindHandler() ?? ((command, arguments) =>
-            throw new CommandNotFoundException("Command not found", command, arguments)))(Command ?? "", Arguments);
+    public void Execute(Context context) => (Command?.FindHandler() ?? ((command, arguments, _) =>
+        throw new CommandNotFoundException("Command not found", command, arguments)))(Command ?? "", Arguments,
+        context);
 }

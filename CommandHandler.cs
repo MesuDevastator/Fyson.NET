@@ -2,4 +2,4 @@
 
 namespace Fyson;
 
-public delegate void CommandHandler(string command, JsonElement arguments);
+public delegate void CommandHandler(string command, JsonElement arguments, Context context);

@@ -1,4 +1,6 @@
-﻿namespace Fyson;
+﻿using System.Text.Json;
+
+namespace Fyson;
 
 public static class LibraryManager
 {
@@ -16,11 +18,23 @@ public static class LibraryManager
             switch (library)
             {
                 case "@math.flib":
-                    RegisterFunction("sqrt", (_, parameters) => Math.Sqrt(parameters.GetDouble()));
+                    RegisterFunction("sqrt",
+                        (function, parameters) => function == "sqrt" ? Math.Sqrt(parameters.GetDouble()) : null);
                     return;
                 default:
                     throw new FileNotFoundException("Library not found", library);
             }
+    }
+
+    public static object? CallFunction(this JsonElement element)
+    {
+        if (element.ValueKind != JsonValueKind.Object) return null;
+        var call = element.Deserialize<FunctionCall>();
+        FunctionHandler? function;
+        return call is not null && call.Function.StartsWith("lib:") &&
+               (function = FindFunction(call.Function[4..])) is not null
+            ? function(call.Function, call.Parameters)
+            : null;
     }
 
     public static FunctionHandler? FindFunction(this string function)

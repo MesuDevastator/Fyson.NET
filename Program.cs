@@ -2,6 +2,7 @@
 using Serilog;
 using Serilog.Core;
 using System.Text.Json;
+using Fyson.Commands;
 
 namespace Fyson;
 
@@ -23,6 +24,7 @@ public static class Program
             return 1;
         }
 
+        CommandManager.RegisterCommand("log", LogCommand.OnCommand);
         string executiveContent;
         try
         {
@@ -51,7 +53,7 @@ public static class Program
         foreach (var operation in script.Operations)
             try
             {
-                operation.Execute();
+                operation.Execute(script.Context);
             }
             catch (Exception ex)
             {

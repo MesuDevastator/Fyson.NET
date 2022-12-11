@@ -8,9 +8,8 @@ public static class CommandManager
     {
         lock (Commands)
         {
-            if (Commands.ContainsKey(command))
-                Commands.Remove(command);
-            Commands.Add(command, handler);
+            if (!Commands.Remove(command))
+                Commands.Add(command, handler);
         }
     }
 

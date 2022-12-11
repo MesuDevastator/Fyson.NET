@@ -2,4 +2,4 @@
 
 namespace Fyson;
 
-public delegate object FunctionHandler(string function, JsonElement parameters);
+public delegate object? FunctionHandler(string function, JsonElement parameters);
